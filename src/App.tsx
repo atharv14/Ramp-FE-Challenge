@@ -13,6 +13,8 @@ export function App() {
   const { data: paginatedTransactions, ...paginatedTransactionsUtils } = usePaginatedTransactions()
   const { data: transactionsByEmployee, ...transactionsByEmployeeUtils } = useTransactionsByEmployee()
   const [isLoading, setIsLoading] = useState(false)
+  const [currentEmployee, setCurrentEmployee] = useState<string | null>(null);
+
 
   const transactions = useMemo(
     () => paginatedTransactions?.data ?? transactionsByEmployee ?? null,
@@ -22,6 +24,7 @@ export function App() {
   const loadAllTransactions = useCallback(async () => {
     setIsLoading(true)
     transactionsByEmployeeUtils.invalidateData()
+    setCurrentEmployee(null);
 
     await employeeUtils.fetchAll()
     setIsLoading(false)
@@ -32,6 +35,7 @@ export function App() {
   const loadTransactionsByEmployee = useCallback(
     async (employeeId: string) => {
       paginatedTransactionsUtils.invalidateData()
+      setCurrentEmployee(employeeId);
       await transactionsByEmployeeUtils.fetchById(employeeId)
     },
     [paginatedTransactionsUtils, transactionsByEmployeeUtils]
@@ -64,7 +68,7 @@ export function App() {
             if (newValue === null) {
               return
             }
-            else if (newValue.id === "") {
+            if (newValue.id === "") {
               await loadAllTransactions()
             }
             else await loadTransactionsByEmployee(newValue.id)
@@ -74,14 +78,18 @@ export function App() {
         <div className="RampBreak--l" />
 
         <div className="RampGrid">
-          <Transactions transactions={transactions} />
+          <Transactions
+            transactions={transactions}
+            toggleApproval={paginatedTransactionsUtils.toggleApproval}
+            transactionStates={paginatedTransactionsUtils.transactionStates}
+          />
 
-          {transactions !== null && (
+          {transactions !== null && !currentEmployee && paginatedTransactionsUtils.hasMorePages && (
             <button
               className="RampButton"
-              disabled={paginatedTransactionsUtils.loading || paginatedTransactions?.nextPage === null || transactionsByEmployee?.length === 0}
+              disabled={paginatedTransactionsUtils.loading}
               onClick={async () => {
-                await loadAllTransactions()
+                await paginatedTransactionsUtils.fetchAll();
               }}
             >
               View More

@@ -16,6 +16,10 @@ type UseTypeBaseByIdResult<TValue> = UseTypeBaseResult<TValue> & {
 
 export type EmployeeResult = UseTypeBaseAllResult<Employee[] | null>
 
-export type PaginatedTransactionsResult = UseTypeBaseAllResult<PaginatedResponse<Transaction[]> | null>
+export type PaginatedTransactionsResult = UseTypeBaseAllResult<PaginatedResponse<Transaction[]> | null> & {
+toggleApproval: (transactionId: string, newValue: boolean) => void;
+hasMorePages: boolean;
+transactionStates: { [id: string]: boolean };
+};
 
 export type TransactionsByEmployeeResult = UseTypeBaseByIdResult<Transaction[] | null>
